@@ -8,10 +8,20 @@ class Users::RegistrationsController < Devise::RegistrationsController
     @user = User.new
   end
 
-  # POST /resource
-  # def create
-  #   super
-  # end
+  def create
+    @user = User.new(sign_up_params)
+    # 1ページ目で入力した情報のバリデーションチェック
+    unless @user.valid?
+      render :new and return
+    end
+    # 1ページ目で入力した情報をsessionに保持させること
+    session["devise.regist_data"] = {user: @user.attributes} # ハッシュ型に値を変換
+    # attributesメソッドでデータ整形をした際にパスワードの情報は含まれない。パスワードを再度sessionに代入する
+    session["devise.regist_data"][:user]["password"] = params[:user][:password]
+    # @userに紐づくインスタンスを生成
+    @address = @user.build_address
+    render :new_address
+  end
 
   # GET /resource/edit
   # def edit
