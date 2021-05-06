@@ -23,6 +23,33 @@ class Users::RegistrationsController < Devise::RegistrationsController
     render :new_address
   end
 
+  def create_address
+    @user = User.new(session["devise.regist_data"]["user"])
+    binding.pry
+    @address = Address.new(address_params)
+    binding.pry
+
+    # 住所情報のバリデーションチェック
+    unless @address.valid?
+      render :new_address and return
+    end
+
+    # 住所情報とsessionで保持していたユーザー情報を合わせて保存
+    @user.build_address(@address.attributes)
+    binding.pry
+    @user.save
+
+    # sessionを削除
+    session["devise.regist_data"]["user"].clear
+    # ログインする
+    sign_in(:user, @user)
+  end
+
+  private
+  def address_params
+    params.require(:address).permit(:postal_code, :address)
+  end
+
   # GET /resource/edit
   # def edit
   #   super
